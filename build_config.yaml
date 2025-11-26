@@ -1,28 +1,29 @@
-# build_config.yaml - 简化版
+# build_config.yaml - 项目构建配置
 
 # 项目基本信息
-project_name: MyApp
+project_name: PyBuild
 version: 1.0.0
+company_name: ASLant
 entry_file: main.py
-icon_file: App.ico
+icon_file: assets/app.ico
 
 # 构建配置
-build_tool: pyinstaller      # pyinstaller | nuitka
-output_dir: dist
+build_tool: nuitka
+output_dir: build
+quiet_mode: true
 
 # 打包选项
+onefile: false
+show_console: true
 standalone: true
-onefile: true
-show_console: false
+remove_output: true
+show_progress: true
+lto: false
+jobs: 16
+compiler: msvc
 
-# 插件
-plugins:
-  - pyqt5
-  - requests
-
+# 排除的包
 exclude_packages:
   - pytest
   - tkinter
 
-# 优化
-jobs: 4
