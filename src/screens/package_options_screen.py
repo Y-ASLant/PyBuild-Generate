@@ -7,7 +7,7 @@ from pathlib import Path
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.containers import Container, Vertical, Horizontal
-from textual.widgets import Static, Button, Switch, Label
+from textual.widgets import Static, Button, Switch, Label, Input
 from textual.binding import Binding
 
 from src.utils import (
@@ -89,6 +89,22 @@ class PackageOptionsScreen(Screen):
         padding-top: 1;
     }
     
+    .field-label {
+        color: $text;
+        height: 1;
+        margin-bottom: 0;
+    }
+    
+    .field-input {
+        width: 100%;
+        height: 3;
+    }
+    
+    #plugins-button {
+        width: 100%;
+        margin: 0;
+    }
+    
     #button-container {
         width: 100%;
         height: auto;
@@ -113,6 +129,7 @@ class PackageOptionsScreen(Screen):
         super().__init__()
         self.config = {}
         self.project_dir: Path = None
+        self.selected_plugins: list[str] = []  # 存储选中的插件
 
     def compose(self) -> ComposeResult:
         """创建界面组件"""
@@ -146,10 +163,23 @@ class PackageOptionsScreen(Screen):
         # 加载现有配置或使用默认配置
         self.config = load_build_config(self.project_dir)
 
-        # 根据构建工具动态生成选项（开关值已在创建时设置）
+        # 加载插件配置
+        plugins_value = self.config.get("plugins", "")
+        if isinstance(plugins_value, str):
+            self.selected_plugins = [
+                p.strip() for p in plugins_value.split(",") if p.strip()
+            ]
+        else:
+            self.selected_plugins = (
+                plugins_value if isinstance(plugins_value, list) else []
+            )
+
+        # 根据构庻工具动态生成选项（开关值已在创庻时设置）
         self._create_options_fields()
 
-    def _create_switch_widget(self, switch_id: str, label: str, default_value: bool, config_key: str):
+    def _create_switch_widget(
+        self, switch_id: str, label: str, default_value: bool, config_key: str
+    ):
         """创建开关组件的辅助方法"""
         return Vertical(
             Horizontal(
@@ -173,42 +203,84 @@ class PackageOptionsScreen(Screen):
         left_widgets = []
         right_widgets = []
 
-        # Nuitka特有选项：独立打包
+        # Nuitka特有选项
         if build_tool == "nuitka":
+            # 左列第1行：并行编译任务数
+            left_widgets.append(
+                Vertical(
+                    Label("并行编译任务数:", classes="field-label"),
+                    Input(
+                        placeholder="默认: 4",
+                        value=str(self.config.get("jobs", 4)),
+                        id="jobs-input",
+                        classes="field-input",
+                    ),
+                    classes="field-group",
+                )
+            )
+            # 右列第1行：插件支持
+            right_widgets.append(
+                Vertical(
+                    Label("启用插件:", classes="field-label"),
+                    Button(
+                        "选择插件...",
+                        id="plugins-button",
+                        variant="primary",
+                        flat=True,
+                    ),
+                    classes="field-group",
+                )
+            )
+            # 左列第2行：独立打包
             left_widgets.append(
                 self._create_switch_widget(
                     "standalone-switch", "独立打包 (Standalone)", True, "standalone"
                 )
             )
-
-        # 通用选项：单文件模式
-        onefile_widget = self._create_switch_widget(
-            "onefile-switch", "单文件模式 (One File)", True, "onefile"
-        )
-        (left_widgets if build_tool == "nuitka" else right_widgets).append(onefile_widget)
-
-        # 通用选项：显示控制台
-        right_widgets.append(
-            self._create_switch_widget(
-                "console-switch", "显示控制台窗口", False, "show_console"
-            )
-        )
-
-        # 通用选项：静默模式
-        left_widgets.append(
-            self._create_switch_widget(
-                "quiet-switch", "静默模式 (减少输出)", False, "quiet_mode"
-            )
-        )
-
-        # Nuitka特有选项
-        if build_tool == "nuitka":
+            # 右列第2行：Python优化
             right_widgets.append(
                 self._create_switch_widget(
-                    "remove-output-switch", "移除构建文件 (节省空间)", True, "remove_output"
+                    "python-flag-switch",
+                    "Python优化 (移除断言和文档)",
+                    False,
+                    "python_flag",
                 )
             )
+            # 左列第3行：LTO优化
             left_widgets.append(
+                self._create_switch_widget(
+                    "lto-switch", "链接时优化 (LTO)", False, "lto"
+                )
+            )
+            # 左列第4行：单文件模式
+            left_widgets.append(
+                self._create_switch_widget(
+                    "onefile-switch", "单文件模式 (One File)", True, "onefile"
+                )
+            )
+            # 左列第5行：静默模式
+            left_widgets.append(
+                self._create_switch_widget(
+                    "quiet-switch", "静默模式 (减少输出)", False, "quiet_mode"
+                )
+            )
+            # 右列第3行：显示控制台窗口
+            right_widgets.append(
+                self._create_switch_widget(
+                    "console-switch", "显示控制台窗口 (Windows)", False, "show_console"
+                )
+            )
+            # 右列第4行：移除构建文件
+            right_widgets.append(
+                self._create_switch_widget(
+                    "remove-output-switch",
+                    "移除构建文件 (节省空间)",
+                    True,
+                    "remove_output",
+                )
+            )
+            # 右列第5行：显示进度条
+            right_widgets.append(
                 self._create_switch_widget(
                     "progressbar-switch", "显示进度条", True, "show_progressbar"
                 )
@@ -216,14 +288,28 @@ class PackageOptionsScreen(Screen):
 
         # PyInstaller特有选项
         if build_tool == "pyinstaller":
+            # 左列：清理临时文件
             left_widgets.append(
                 self._create_switch_widget(
                     "clean-switch", "清理临时文件", True, "clean"
                 )
             )
+            # 左列：静默模式
+            left_widgets.append(
+                self._create_switch_widget(
+                    "quiet-switch", "静默模式 (减少输出)", False, "quiet_mode"
+                )
+            )
+            # 右列：调试模式
             right_widgets.append(
                 self._create_switch_widget(
                     "debug-switch", "调试模式 (输出详细信息)", False, "debug"
+                )
+            )
+            # 右列：显示进度条
+            right_widgets.append(
+                self._create_switch_widget(
+                    "progressbar-switch", "显示进度条", True, "show_progressbar"
                 )
             )
 
@@ -240,13 +326,6 @@ class PackageOptionsScreen(Screen):
         existing_config = load_build_config(self.project_dir)
         build_tool = existing_config.get("build_tool", "nuitka")
 
-        # 只更新打包选项相关的字段
-        # Nuitka特有：独立打包
-        if build_tool == "nuitka":
-            existing_config["standalone"] = self.query_one(
-                "#standalone-switch", Switch
-            ).value
-
         # 通用选项
         existing_config["onefile"] = self.query_one("#onefile-switch", Switch).value
         existing_config["show_console"] = self.query_one(
@@ -256,21 +335,40 @@ class PackageOptionsScreen(Screen):
 
         # Nuitka特有选项
         if build_tool == "nuitka":
+            existing_config["standalone"] = self.query_one(
+                "#standalone-switch", Switch
+            ).value
             existing_config["remove_output"] = self.query_one(
                 "#remove-output-switch", Switch
             ).value
             existing_config["show_progressbar"] = self.query_one(
                 "#progressbar-switch", Switch
             ).value
+            existing_config["lto"] = self.query_one("#lto-switch", Switch).value
+            # 并行编译任务数
+            jobs_value = self.query_one("#jobs-input", Input).value
+            try:
+                existing_config["jobs"] = int(jobs_value) if jobs_value else 4
+            except ValueError:
+                existing_config["jobs"] = 4
+            # Python优化标志
+            existing_config["python_flag"] = self.query_one(
+                "#python-flag-switch", Switch
+            ).value
+            # 插件支持 - 使用存储的插件列表
+            existing_config["plugins"] = (
+                ",".join(self.selected_plugins) if self.selected_plugins else ""
+            )
 
         # PyInstaller特有选项
         if build_tool == "pyinstaller":
             existing_config["clean"] = self.query_one("#clean-switch", Switch).value
             existing_config["debug"] = self.query_one("#debug-switch", Switch).value
+            existing_config["show_progressbar"] = self.query_one(
+                "#progressbar-switch", Switch
+            ).value
 
         # 保持列表字段
-        if "plugins" not in existing_config:
-            existing_config["plugins"] = []
         if "exclude_packages" not in existing_config:
             existing_config["exclude_packages"] = []
 
@@ -287,10 +385,27 @@ class PackageOptionsScreen(Screen):
             self.action_save()
         elif button_id == "generate-btn":
             self.action_generate()
+        elif button_id == "plugins-button":
+            self.run_worker(self.action_select_plugins())
 
     def action_back(self) -> None:
         """返回上一屏"""
         self.app.pop_screen()
+
+    async def action_select_plugins(self) -> None:
+        """打开插件选择界面"""
+        from src.screens.plugin_selector_screen import PluginSelectorScreen
+
+        # 打开插件选择界面并等待结果
+        result = await self.app.push_screen_wait(
+            PluginSelectorScreen(self.selected_plugins)
+        )
+
+        # 如果用户确认选择（不是取消），更新插件列表
+        if result is not None:
+            self.selected_plugins = result
+            plugin_count = len(result)
+            self.app.notify(f"已选择 {plugin_count} 个插件", severity="information")
 
     def _validate_and_save(self) -> bool:
         """验证并保存配置，返回是否成功"""

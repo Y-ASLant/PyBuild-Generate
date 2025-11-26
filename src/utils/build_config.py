@@ -23,6 +23,9 @@ DEFAULT_BUILD_CONFIG = {
     # Nuitka特有
     "remove_output": True,
     "show_progressbar": True,
+    "lto": False,
+    "jobs": 4,
+    "python_flag": False,
     # PyInstaller特有
     "clean": True,
     "debug": False,
@@ -146,21 +149,37 @@ def save_build_config(project_dir: Path, config: Dict[str, Any]) -> bool:
             lines.append(
                 f"show_progressbar: {str(config.get('show_progressbar', True)).lower()}\n"
             )
+            lines.append(f"lto: {str(config.get('lto', False)).lower()}\n")
+            lines.append(f"jobs: {config.get('jobs', 4)}\n")
+            lines.append(
+                f"python_flag: {str(config.get('python_flag', False)).lower()}\n"
+            )
 
         # PyInstaller特有选项
         if config.get("build_tool") == "pyinstaller":
             lines.append(f"clean: {str(config.get('clean', True)).lower()}\n")
             lines.append(f"debug: {str(config.get('debug', False)).lower()}\n")
+            lines.append(
+                f"show_progressbar: {str(config.get('show_progressbar', True)).lower()}\n"
+            )
 
         lines.append("\n")
 
         # 插件列表
-        if config.get("plugins"):
+        plugins = config.get("plugins")
+        if plugins:
             lines.append("# 插件\n")
-            lines.append("plugins:\n")
-            for plugin in config["plugins"]:
-                lines.append(f"  - {plugin}\n")
-            lines.append("\n")
+            # 如果plugins是字符串，转换为列表
+            if isinstance(plugins, str):
+                plugin_list = [p.strip() for p in plugins.split(",") if p.strip()]
+            else:
+                plugin_list = plugins
+
+            if plugin_list:
+                lines.append("plugins:\n")
+                for plugin in plugin_list:
+                    lines.append(f"  - {plugin}\n")
+                lines.append("\n")
 
         # 排除包列表
         if config.get("exclude_packages"):
