@@ -17,10 +17,9 @@ onefile: false
 show_console: true
 standalone: true
 remove_output: true
-show_progressbar: true
+show_progress: true
 lto: false
 jobs: 16
-python_flag: false
 compiler: msvc
 
 # 排除的包

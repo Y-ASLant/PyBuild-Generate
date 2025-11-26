@@ -22,10 +22,10 @@ DEFAULT_BUILD_CONFIG = {
     "quiet_mode": False,
     # Nuitka特有
     "remove_output": True,
-    "show_progressbar": True,
+    "show_progress": True,
     "lto": False,
     "jobs": 4,
-    "python_flag": False,
+    "python_flag": "",  # 空字符串表示不使用，可选值: "-O", "no_asserts", "no_docstrings"
     "compiler": "msvc",
     # PyInstaller特有
     "clean": True,
@@ -148,13 +148,13 @@ def save_build_config(project_dir: Path, config: Dict[str, Any]) -> bool:
                 f"remove_output: {str(config.get('remove_output', True)).lower()}\n"
             )
             lines.append(
-                f"show_progressbar: {str(config.get('show_progressbar', True)).lower()}\n"
+                f"show_progress: {str(config.get('show_progress', True)).lower()}\n"
             )
             lines.append(f"lto: {str(config.get('lto', False)).lower()}\n")
             lines.append(f"jobs: {config.get('jobs', 4)}\n")
-            lines.append(
-                f"python_flag: {str(config.get('python_flag', False)).lower()}\n"
-            )
+            python_flag = config.get('python_flag', '')
+            if python_flag:
+                lines.append(f"python_flag: {python_flag}\n")
             lines.append(f"compiler: {config.get('compiler', 'msvc')}\n")
 
         # PyInstaller特有选项

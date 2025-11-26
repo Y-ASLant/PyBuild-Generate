@@ -241,13 +241,20 @@ class PackageOptionsScreen(Screen):
                     "standalone-switch", "独立打包 (Standalone)", True, "standalone"
                 )
             )
-            # 右列第2行：Python优化
+            # 右列第2行：Python优化（从字符串转换为布尔值）
+            python_flag_value = bool(self.config.get("python_flag", ""))
             right_widgets.append(
-                self._create_switch_widget(
-                    "python-flag-switch",
-                    "Python优化 (移除断言和文档)",
-                    False,
-                    "python_flag",
+                Vertical(
+                    Horizontal(
+                        Switch(
+                            value=python_flag_value,
+                            id="python-flag-switch",
+                            classes="field-switch",
+                        ),
+                        Label("Python优化 (移除断言和文档)", classes="field-switch-label"),
+                        classes="field-switch-container",
+                    ),
+                    classes="field-group",
                 )
             )
             # 左列第3行：LTO优化
@@ -336,10 +343,14 @@ class PackageOptionsScreen(Screen):
         existing_config["show_console"] = self.query_one(
             "#console-switch", Switch
         ).value
-        # quiet_mode 和 show_progressbar 同步（通用逻辑）
+        # quiet_mode 和 show_progress 同步（通用逻辑）
         quiet_mode = self.query_one("#quiet-switch", Switch).value
         existing_config["quiet_mode"] = quiet_mode
-        existing_config["show_progressbar"] = quiet_mode
+        # Nuitka使用show_progress，PyInstaller使用show_progressbar
+        if build_tool == "nuitka":
+            existing_config["show_progress"] = quiet_mode
+        else:
+            existing_config["show_progressbar"] = quiet_mode
 
         # Nuitka特有选项
         if build_tool == "nuitka":
@@ -356,10 +367,9 @@ class PackageOptionsScreen(Screen):
                 existing_config["jobs"] = int(jobs_value) if jobs_value else 4
             except ValueError:
                 existing_config["jobs"] = 4
-            # Python优化标志
-            existing_config["python_flag"] = self.query_one(
-                "#python-flag-switch", Switch
-            ).value
+            # Python优化标志（开关转换为字符串）
+            python_opt = self.query_one("#python-flag-switch", Switch).value
+            existing_config["python_flag"] = "-O" if python_opt else ""
             # 插件支持 - 使用存储的插件列表
             existing_config["plugins"] = (
                 ",".join(self.selected_plugins) if self.selected_plugins else ""
