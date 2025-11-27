@@ -3,6 +3,7 @@
 根据配置生成 Nuitka 或 PyInstaller 构建脚本
 """
 
+import re
 from pathlib import Path
 from typing import Dict, Any
 
@@ -292,23 +293,29 @@ def generate_pyinstaller_script(config: Dict[str, Any], project_dir: Path) -> st
     # UAC 管理员权限
     if config.get("uac_admin", False):
         lines.append("        '--uac-admin',")
-    
+
     # 隐藏导入
     hidden_imports = config.get("hidden_imports", "")
     if hidden_imports:
-        for module in [m.strip() for m in hidden_imports.split(",") if m.strip()]:
+        # 支持多种分隔符：空格、逗号
+        modules = [m.strip() for m in re.split(r"[,\s]+", hidden_imports) if m.strip()]
+        for module in modules:
             lines.append(f"        '--hidden-import={module}',")
-    
+
     # 排除模块
     exclude_modules = config.get("exclude_modules", "")
     if exclude_modules:
-        for module in [m.strip() for m in exclude_modules.split(",") if m.strip()]:
+        # 支持多种分隔符：空格、逗号
+        modules = [m.strip() for m in re.split(r"[,\s]+", exclude_modules) if m.strip()]
+        for module in modules:
             lines.append(f"        '--exclude-module={module}',")
-    
+
     # 添加数据文件
     add_data = config.get("add_data", "")
     if add_data:
-        for data_entry in [d.strip() for d in add_data.split(";") if d.strip()]:
+        # 按空格分割，每个条目应该是 src;dest 格式（保留分号）
+        entries = [e.strip() for e in add_data.split() if e.strip()]
+        for data_entry in entries:
             lines.append(f"        '--add-data={data_entry}',")
 
     # 入口文件

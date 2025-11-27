@@ -391,9 +391,9 @@ class PackageOptionsScreen(Screen):
             left_widgets.append(
                 self._create_input_widget(
                     "hidden-imports-input",
-                    "隐藏导入 (逗号分隔):",
+                    "隐藏导入 (支持空格、中英文逗号分隔):",
                     "hidden_imports",
-                    "例如: PIL,numpy.core",
+                    "例如: PIL numpy.core pandas",
                 )
             )
 
@@ -401,9 +401,9 @@ class PackageOptionsScreen(Screen):
             right_widgets.append(
                 self._create_input_widget(
                     "exclude-modules-input",
-                    "排除模块 (逗号分隔):",
+                    "排除模块 (支持空格、中英文逗号分隔):",
                     "exclude_modules",
-                    "例如: tkinter,test",
+                    "例如: tkinter test unittest",
                 )
             )
 
@@ -411,9 +411,9 @@ class PackageOptionsScreen(Screen):
             left_widgets.append(
                 self._create_input_widget(
                     "add-data-input",
-                    "数据文件 (每行一个):",
+                    "数据文件 (支持空格、中英文逗号分隔):",
                     "add_data",
-                    "格式: src;dest 或 src:dest",
+                    "格式: src;dest 多个用空格",
                 )
             )
 
