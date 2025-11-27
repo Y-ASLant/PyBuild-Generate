@@ -220,6 +220,21 @@ class PackageOptionsScreen(Screen):
             classes="field-group",
         )
 
+    def _create_input_widget(
+        self, input_id: str, label: str, config_key: str, placeholder: str
+    ):
+        """创建输入框组件的辅助方法"""
+        return Vertical(
+            Label(label, classes="field-label"),
+            Input(
+                value=self.config.get(config_key, ""),
+                placeholder=placeholder,
+                id=input_id,
+                classes="field-input",
+            ),
+            classes="field-group",
+        )
+
     def _create_options_fields(self) -> None:
         """根据构建工具创建选项字段"""
         build_tool = self.config.get("build_tool", "nuitka")
@@ -350,10 +365,55 @@ class PackageOptionsScreen(Screen):
                     "quiet-switch", "静默输出 (仅进度条)", False, "quiet_mode"
                 )
             )
+            # 左列：_internal 目录名称
+            left_widgets.append(
+                self._create_input_widget(
+                    "contents-dir-input",
+                    "内部目录名称:",
+                    "contents_directory",
+                    "_internal (默认为 .)",
+                )
+            )
             # 右列：调试模式
             right_widgets.append(
                 self._create_switch_widget(
                     "debug-switch", "调试模式 (输出详细信息)", False, "debug"
+                )
+            )
+            # 右列：UAC 管理员权限
+            right_widgets.append(
+                self._create_switch_widget(
+                    "uac-admin-switch", "管理员权限 (Windows UAC)", False, "uac_admin"
+                )
+            )
+
+            # 左列：隐藏导入
+            left_widgets.append(
+                self._create_input_widget(
+                    "hidden-imports-input",
+                    "隐藏导入 (逗号分隔):",
+                    "hidden_imports",
+                    "例如: PIL,numpy.core",
+                )
+            )
+
+            # 右列：排除模块
+            right_widgets.append(
+                self._create_input_widget(
+                    "exclude-modules-input",
+                    "排除模块 (逗号分隔):",
+                    "exclude_modules",
+                    "例如: tkinter,test",
+                )
+            )
+
+            # 左列：添加数据文件
+            left_widgets.append(
+                self._create_input_widget(
+                    "add-data-input",
+                    "数据文件 (每行一个):",
+                    "add_data",
+                    "格式: src;dest 或 src:dest",
                 )
             )
 
@@ -381,7 +441,7 @@ class PackageOptionsScreen(Screen):
             quiet_mode = self.query_one("#quiet-switch", Switch).value
             existing_config["quiet_mode"] = quiet_mode
             existing_config["show_progress"] = not quiet_mode
-            
+
             # Nuitka 特有选项
             existing_config["standalone"] = self.query_one(
                 "#standalone-switch", Switch
@@ -412,10 +472,36 @@ class PackageOptionsScreen(Screen):
             quiet_mode = self.query_one("#quiet-switch", Switch).value
             existing_config["quiet_mode"] = quiet_mode
             existing_config["show_progressbar"] = not quiet_mode
-            
+
             # PyInstaller 特有选项
             existing_config["clean"] = self.query_one("#clean-switch", Switch).value
             existing_config["debug"] = self.query_one("#debug-switch", Switch).value
+
+            # 内部目录名称
+            contents_dir = self.query_one("#contents-dir-input", Input).value.strip()
+            existing_config["contents_directory"] = (
+                contents_dir if contents_dir else "."
+            )
+
+            # UAC 管理员权限
+            existing_config["uac_admin"] = self.query_one(
+                "#uac-admin-switch", Switch
+            ).value
+
+            # 隐藏导入
+            existing_config["hidden_imports"] = self.query_one(
+                "#hidden-imports-input", Input
+            ).value.strip()
+
+            # 排除模块
+            existing_config["exclude_modules"] = self.query_one(
+                "#exclude-modules-input", Input
+            ).value.strip()
+
+            # 添加数据文件
+            existing_config["add_data"] = self.query_one(
+                "#add-data-input", Input
+            ).value.strip()
 
         # 保持列表字段
         if "exclude_packages" not in existing_config:
@@ -457,6 +543,13 @@ class PackageOptionsScreen(Screen):
 
     def action_back(self) -> None:
         """返回上一屏"""
+        # 返回前自动保存配置
+        try:
+            self._save_config_from_ui()
+            save_build_config(self.project_dir, self.config)
+        except Exception as e:
+            # 显示保存失败的错误信息
+            self.app.notify(f"保存配置失败: {str(e)}", severity="error")
         self.app.pop_screen()
 
     async def action_select_plugins(self) -> None:
@@ -526,11 +619,11 @@ class PackageOptionsScreen(Screen):
 
         # 打开生成进度界面
         from src.screens.generation_screen import GenerationScreen
-        
+
         result = await self.app.push_screen_wait(
             GenerationScreen(self.config, self.project_dir)
         )
-        
+
         if result:
             self.app.notify("脚本生成成功！", severity="information")
         else:

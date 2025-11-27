@@ -262,6 +262,12 @@ def generate_pyinstaller_script(config: Dict[str, Any], project_dir: Path) -> st
         lines.append("        '--workpath=build/temp',")
     lines.append("        f'--name={PROJECT_NAME}',")
 
+    # 内部目录名称（仅非 onefile 模式）
+    if not onefile_mode:
+        contents_dir = config.get("contents_directory", ".")
+        if contents_dir and contents_dir != ".":
+            lines.append(f"        '--contents-directory={contents_dir}',")
+
     # 控制台选项
     if not config.get("show_console", False):
         lines.append("        '--noconsole',")
@@ -282,6 +288,28 @@ def generate_pyinstaller_script(config: Dict[str, Any], project_dir: Path) -> st
     # 图标
     if config.get("icon_file"):
         lines.append("        f'--icon={ICON_FILE}',")
+
+    # UAC 管理员权限
+    if config.get("uac_admin", False):
+        lines.append("        '--uac-admin',")
+    
+    # 隐藏导入
+    hidden_imports = config.get("hidden_imports", "")
+    if hidden_imports:
+        for module in [m.strip() for m in hidden_imports.split(",") if m.strip()]:
+            lines.append(f"        '--hidden-import={module}',")
+    
+    # 排除模块
+    exclude_modules = config.get("exclude_modules", "")
+    if exclude_modules:
+        for module in [m.strip() for m in exclude_modules.split(",") if m.strip()]:
+            lines.append(f"        '--exclude-module={module}',")
+    
+    # 添加数据文件
+    add_data = config.get("add_data", "")
+    if add_data:
+        for data_entry in [d.strip() for d in add_data.split(";") if d.strip()]:
+            lines.append(f"        '--add-data={data_entry}',")
 
     # 入口文件
     lines.append("        ENTRY_FILE,")

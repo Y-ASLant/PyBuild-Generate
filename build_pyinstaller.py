@@ -46,9 +46,11 @@ def build():
         f'--distpath={OUTPUT_DIR}',
         '--workpath=build/temp',
         f'--name={PROJECT_NAME}',
+        '--contents-directory=lib',
         '--clean',
         '--log-level=WARN',
         f'--icon={ICON_FILE}',
+        '--exclude-module=nuitka',
         ENTRY_FILE,
     ]
 
