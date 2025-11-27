@@ -7,6 +7,18 @@ PyBuilder - Nuitka 构建脚本
 import sys
 import subprocess
 import shutil
+import time
+
+
+# ANSI 颜色代码
+class Color:
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    CYAN = '\033[96m'
+    GRAY = '\033[90m'
 
 
 # 构建配置
@@ -22,8 +34,9 @@ def build():
     # 获取终端宽度
     width = shutil.get_terminal_size().columns
     separator = '-' * width
+    start_time = time.time()
 
-    print(f'开始构建 {PROJECT_NAME} v{VERSION}...')
+    print(f'{Color.CYAN}{Color.BOLD}开始构建 {PROJECT_NAME} v{VERSION}...{Color.RESET}')
     print(separator)
 
     # 构建 Nuitka 命令
@@ -43,25 +56,34 @@ def build():
     ]
 
     # 执行构建
-    print('执行命令:')
-    print(' '.join(cmd))
+    print(f'{Color.GRAY}执行命令:{Color.RESET}')
+    print(f'{Color.GRAY}' + ' '.join(cmd) + f'{Color.RESET}')
     print(separator)
-    print('正在执行构建，请稍候...')
+    print(f'{Color.YELLOW}正在执行构建，请稍候...{Color.RESET}')
     print()
 
     try:
         subprocess.run(cmd, check=True)
         print(separator)
-        print('✓ 构建成功！')
-        print(f'输出目录: {OUTPUT_DIR}')
+        elapsed_time = time.time() - start_time
+        minutes = int(elapsed_time // 60)
+        seconds = int(elapsed_time % 60)
+        print(f'{Color.GREEN}{Color.BOLD}构建成功！{Color.RESET}')
+        import os
+        abs_output = os.path.abspath(OUTPUT_DIR)
+        print(f'{Color.GREEN}输出目录: {abs_output}{Color.RESET}')
+        if minutes > 0:
+            print(f'{Color.CYAN}本次构建时长: {minutes}分{seconds}秒{Color.RESET}')
+        else:
+            print(f'{Color.CYAN}本次构建时长: {seconds}秒{Color.RESET}')
         return 0
     except subprocess.CalledProcessError as e:
         print(separator)
-        print(f'✗ 构建失败: {e}')
+        print(f'{Color.RED}{Color.BOLD}✗ 构建失败: {Color.RESET}{Color.RED}{e}{Color.RESET}')
         return 1
     except Exception as e:
         print(separator)
-        print(f'✗ 发生错误: {e}')
+        print(f'{Color.RED}{Color.BOLD}✗ 发生错误: {Color.RESET}{Color.RED}{e}{Color.RESET}')
         return 1
 
 

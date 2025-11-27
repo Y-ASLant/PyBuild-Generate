@@ -21,6 +21,18 @@ def generate_nuitka_script(config: Dict[str, Any], project_dir: Path) -> str:
     lines.append("import sys")
     lines.append("import subprocess")
     lines.append("import shutil")
+    lines.append("import time")
+    lines.append("")
+    lines.append("")
+    lines.append("# ANSI 颜色代码")
+    lines.append("class Color:")
+    lines.append("    RESET = '\\033[0m'")
+    lines.append("    BOLD = '\\033[1m'")
+    lines.append("    GREEN = '\\033[92m'")
+    lines.append("    YELLOW = '\\033[93m'")
+    lines.append("    RED = '\\033[91m'")
+    lines.append("    CYAN = '\\033[96m'")
+    lines.append("    GRAY = '\\033[90m'")
     lines.append("")
     lines.append("")
 
@@ -42,8 +54,11 @@ def generate_nuitka_script(config: Dict[str, Any], project_dir: Path) -> str:
     lines.append("    # 获取终端宽度")
     lines.append("    width = shutil.get_terminal_size().columns")
     lines.append("    separator = '-' * width")
+    lines.append("    start_time = time.time()")
     lines.append("")
-    lines.append("    print(f'开始构建 {PROJECT_NAME} v{VERSION}...')")
+    lines.append(
+        "    print(f'{Color.CYAN}{Color.BOLD}开始构建 {PROJECT_NAME} v{VERSION} {Color.RESET}')"
+    )
     lines.append("    print(separator)")
     lines.append("")
 
@@ -127,25 +142,42 @@ def generate_nuitka_script(config: Dict[str, Any], project_dir: Path) -> str:
 
     # 执行构建
     lines.append("    # 执行构建")
-    lines.append("    print('执行命令:')")
-    lines.append("    print(' '.join(cmd))")
+    lines.append("    print(f'{Color.GRAY}执行命令:{Color.RESET}')")
+    lines.append("    print(f'{Color.GRAY}' + ' '.join(cmd) + f'{Color.RESET}')")
     lines.append("    print(separator)")
-    lines.append("    print('正在执行构建，请稍候...')")
+    lines.append("    print(f'{Color.YELLOW}正在执行构建，请稍候...{Color.RESET}')")
     lines.append("    print()")
     lines.append("")
     lines.append("    try:")
     lines.append("        subprocess.run(cmd, check=True)")
     lines.append("        print(separator)")
-    lines.append("        print('✓ 构建成功！')")
-    lines.append("        print(f'输出目录: {OUTPUT_DIR}')")
+    lines.append("        elapsed_time = time.time() - start_time")
+    lines.append("        minutes = int(elapsed_time // 60)")
+    lines.append("        seconds = int(elapsed_time % 60)")
+    lines.append("        print(f'{Color.GREEN}{Color.BOLD}构建成功！{Color.RESET}')")
+    lines.append("        import os")
+    lines.append("        abs_output = os.path.abspath(OUTPUT_DIR)")
+    lines.append("        print(f'{Color.GREEN}输出目录: {abs_output}{Color.RESET}')")
+    lines.append("        if minutes > 0:")
+    lines.append(
+        "            print(f'{Color.CYAN}本次构建时长: {minutes}分{seconds}秒{Color.RESET}')"
+    )
+    lines.append("        else:")
+    lines.append(
+        "            print(f'{Color.CYAN}本次构建时长: {seconds}秒{Color.RESET}')"
+    )
     lines.append("        return 0")
     lines.append("    except subprocess.CalledProcessError as e:")
     lines.append("        print(separator)")
-    lines.append("        print(f'✗ 构建失败: {e}')")
+    lines.append(
+        "        print(f'{Color.RED}{Color.BOLD}✗ 构建失败: {Color.RESET}{Color.RED}{e}{Color.RESET}')"
+    )
     lines.append("        return 1")
     lines.append("    except Exception as e:")
     lines.append("        print(separator)")
-    lines.append("        print(f'✗ 发生错误: {e}')")
+    lines.append(
+        "        print(f'{Color.RED}{Color.BOLD}✗ 发生错误: {Color.RESET}{Color.RED}{e}{Color.RESET}')"
+    )
     lines.append("        return 1")
     lines.append("")
 
@@ -172,6 +204,18 @@ def generate_pyinstaller_script(config: Dict[str, Any], project_dir: Path) -> st
     lines.append("import sys")
     lines.append("import subprocess")
     lines.append("import shutil")
+    lines.append("import time")
+    lines.append("")
+    lines.append("")
+    lines.append("# ANSI 颜色代码")
+    lines.append("class Color:")
+    lines.append("    RESET = '\\033[0m'")
+    lines.append("    BOLD = '\\033[1m'")
+    lines.append("    GREEN = '\\033[92m'")
+    lines.append("    YELLOW = '\\033[93m'")
+    lines.append("    RED = '\\033[91m'")
+    lines.append("    CYAN = '\\033[96m'")
+    lines.append("    GRAY = '\\033[90m'")
     lines.append("")
     lines.append("")
 
@@ -191,8 +235,11 @@ def generate_pyinstaller_script(config: Dict[str, Any], project_dir: Path) -> st
     lines.append("    # 获取终端宽度")
     lines.append("    width = shutil.get_terminal_size().columns")
     lines.append("    separator = '-' * width")
+    lines.append("    start_time = time.time()")
     lines.append("")
-    lines.append("    print(f'开始构建 {PROJECT_NAME} v{VERSION}...')")
+    lines.append(
+        "    print(f'{Color.CYAN}{Color.BOLD}开始构建 {PROJECT_NAME} v{VERSION}{Color.RESET}')"
+    )
     lines.append("    print(separator)")
     lines.append("")
 
@@ -229,25 +276,42 @@ def generate_pyinstaller_script(config: Dict[str, Any], project_dir: Path) -> st
 
     # 执行构建
     lines.append("    # 执行构建")
-    lines.append("    print('执行命令:')")
-    lines.append("    print(' '.join(cmd))")
+    lines.append("    print(f'{Color.GRAY}执行命令:{Color.RESET}')")
+    lines.append("    print(f'{Color.GRAY}' + ' '.join(cmd) + f'{Color.RESET}')")
     lines.append("    print(separator)")
-    lines.append("    print('正在执行构建，请稍候...')")
+    lines.append("    print(f'{Color.YELLOW}正在执行构建，请稍候...{Color.RESET}')")
     lines.append("    print()")
     lines.append("")
     lines.append("    try:")
     lines.append("        subprocess.run(cmd, check=True)")
     lines.append("        print(separator)")
-    lines.append("        print('✓ 构建成功！')")
-    lines.append("        print(f'输出目录: {OUTPUT_DIR}')")
+    lines.append("        elapsed_time = time.time() - start_time")
+    lines.append("        minutes = int(elapsed_time // 60)")
+    lines.append("        seconds = int(elapsed_time % 60)")
+    lines.append("        print(f'{Color.GREEN}{Color.BOLD}构建成功！{Color.RESET}')")
+    lines.append("        import os")
+    lines.append("        abs_output = os.path.abspath(OUTPUT_DIR)")
+    lines.append("        print(f'{Color.GREEN}输出目录: {abs_output}{Color.RESET}')")
+    lines.append("        if minutes > 0:")
+    lines.append(
+        "            print(f'{Color.CYAN}本次构建时长: {minutes}分{seconds}秒{Color.RESET}')"
+    )
+    lines.append("        else:")
+    lines.append(
+        "            print(f'{Color.CYAN}本次构建时长: {seconds}秒{Color.RESET}')"
+    )
     lines.append("        return 0")
     lines.append("    except subprocess.CalledProcessError as e:")
     lines.append("        print(separator)")
-    lines.append("        print(f'✗ 构建失败: {e}')")
+    lines.append(
+        "        print(f'{Color.RED}{Color.BOLD}✗ 构建失败: {Color.RESET}{Color.RED}{e}{Color.RESET}')"
+    )
     lines.append("        return 1")
     lines.append("    except Exception as e:")
     lines.append("        print(separator)")
-    lines.append("        print(f'✗ 发生错误: {e}')")
+    lines.append(
+        "        print(f'{Color.RED}{Color.BOLD}✗ 发生错误: {Color.RESET}{Color.RED}{e}{Color.RESET}')"
+    )
     lines.append("        return 1")
     lines.append("")
 
