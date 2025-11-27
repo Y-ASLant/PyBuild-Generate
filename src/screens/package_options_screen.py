@@ -100,6 +100,19 @@ class PackageOptionsScreen(Screen):
         height: 3;
     }
     
+    #jobs-input {
+        width: 30;
+        height: 3;
+    }
+    
+    #jobs-decrease-btn, #jobs-increase-btn {
+        min-width: 5;
+        width: 5;
+        height: 3;
+        margin: 0 0 0 1;
+        padding: 0;
+    }
+    
     #plugins-button, #compiler-button {
         width: 100%;
         margin: 0;
@@ -132,6 +145,7 @@ class PackageOptionsScreen(Screen):
         self.selected_plugins: list[str] = []  # 存储选中的插件
         # 根据平台设置默认编译器
         import platform
+
         os_type = platform.system()
         if os_type == "Windows":
             self.selected_compiler = "msvc"
@@ -217,15 +231,15 @@ class PackageOptionsScreen(Screen):
 
         # Nuitka特有选项
         if build_tool == "nuitka":
-            # 左列第1行：并行编译任务数
+            # 左列第1行：C编译器选择
             left_widgets.append(
                 Vertical(
-                    Label("并行编译任务数:", classes="field-label"),
-                    Input(
-                        placeholder="默认: 4",
-                        value=str(self.config.get("jobs", 4)),
-                        id="jobs-input",
-                        classes="field-input",
+                    Label("C 编译器:", classes="field-label"),
+                    Button(
+                        "选择编译器...",
+                        id="compiler-button",
+                        variant="primary",
+                        flat=True,
                     ),
                     classes="field-group",
                 )
@@ -259,7 +273,9 @@ class PackageOptionsScreen(Screen):
                             id="python-flag-switch",
                             classes="field-switch",
                         ),
-                        Label("Python优化 (移除断言和文档)", classes="field-switch-label"),
+                        Label(
+                            "Python优化 (移除断言和文档)", classes="field-switch-label"
+                        ),
                         classes="field-switch-container",
                     ),
                     classes="field-group",
@@ -298,15 +314,23 @@ class PackageOptionsScreen(Screen):
                     "remove_output",
                 )
             )
-            # 右列第5行：C编译器选择
+            # 右列第5行：编译线程
             right_widgets.append(
                 Vertical(
-                    Label("C 编译器:", classes="field-label"),
-                    Button(
-                        "选择编译器...",
-                        id="compiler-button",
-                        variant="primary",
-                        flat=True,
+                    Horizontal(
+                        Input(
+                            placeholder="编译线程 (默认: 4)",
+                            value=str(self.config.get("jobs", 4)),
+                            id="jobs-input",
+                            classes="field-input",
+                        ),
+                        Button(
+                            "-", id="jobs-decrease-btn", variant="default", flat=True
+                        ),
+                        Button(
+                            "+", id="jobs-increase-btn", variant="default", flat=True
+                        ),
+                        classes="field-switch-container",
                     ),
                     classes="field-group",
                 )
@@ -411,6 +435,22 @@ class PackageOptionsScreen(Screen):
             self.run_worker(self.action_select_plugins())
         elif button_id == "compiler-button":
             self.run_worker(self.action_select_compiler())
+        elif button_id == "jobs-decrease-btn":
+            self._adjust_jobs(-1)
+        elif button_id == "jobs-increase-btn":
+            self._adjust_jobs(1)
+
+    def _adjust_jobs(self, delta: int) -> None:
+        """调整编译线程数"""
+        jobs_input = self.query_one("#jobs-input", Input)
+        try:
+            current_value = int(jobs_input.value) if jobs_input.value else 4
+        except ValueError:
+            current_value = 4
+
+        # 计算新值，最小为1
+        new_value = max(1, current_value + delta)
+        jobs_input.value = str(new_value)
 
     def action_back(self) -> None:
         """返回上一屏"""

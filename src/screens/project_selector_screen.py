@@ -2,7 +2,9 @@
 项目目录选择屏幕
 """
 
+import asyncio
 from pathlib import Path
+from typing import Dict, List, Tuple
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.containers import Container, Vertical, Horizontal
@@ -47,6 +49,8 @@ class ProjectSelectorScreen(Screen):
         width: 100%;
         height: auto;
         margin-bottom: 1;
+        border: solid $accent;
+        padding: 0 1;
     }
     
     #path-label {
@@ -126,6 +130,8 @@ class ProjectSelectorScreen(Screen):
         self.selected_path: Path = Path.cwd()  # 默认当前目录
         self.current_page = 0  # 当前页面
         self.items_per_page = 12  # 每页显示12条
+        self._dir_cache: Dict[Path, List[Path]] = {}  # 目录内容缓存
+        self._loading = False  # 加载状态标志
 
     def compose(self) -> ComposeResult:
         """创建界面组件"""
@@ -156,58 +162,96 @@ class ProjectSelectorScreen(Screen):
 
     def on_mount(self) -> None:
         """挂载时刷新目录列表"""
-        self.refresh_directory_list()
+        self.refresh_directory_list_async()
 
-    def refresh_directory_list(self) -> None:
-        """刷新目录列表（固定显示12条）"""
-        list_view = self.query_one("#directory-list", ListView)
-        list_view.clear()
-
+    async def _scan_directory_async(self, path: Path) -> Tuple[List[Path], str]:
+        """异步扫描目录，返回（项目列表, 错误信息）"""
         try:
-            # 获取当前目录下的所有项目
-            all_items = []
-
-            # 添加 ".." 返回上一级（如果不是根目录）
-            parent = self.selected_path.parent
-            if parent != self.selected_path:
-                parent_item = ListItem(Label("📁 .."), classes="parent-dir")
-                parent_item.is_parent = True
-                all_items.append(parent_item)
-
-            # 获取目录内容
-            try:
-                dir_items = []
-                for item in self.selected_path.iterdir():
-                    dir_items.append(item)
-            except PermissionError:
-                self.app.notify(f"无权限访问: {self.selected_path}", severity="error")
-                return
+            # 在线程池中执行文件系统操作
+            loop = asyncio.get_event_loop()
+            dir_items = await loop.run_in_executor(None, lambda: list(path.iterdir()))
 
             # 排序：文件夹在前，文件在后
             dir_items.sort(key=lambda x: (not x.is_dir(), x.name.lower()))
-
-            # 添加到列表（只显示前12条，如果有..则显示11条）
-            max_items = self.items_per_page - len(all_items)  # 减去..后的剩余数量
-            for item in dir_items[:max_items]:
-                if item.is_dir():
-                    icon = "📁"
-                    label = Label(f"{icon} {item.name}")
-                    list_item = ListItem(label, classes="directory")
-                    list_item.item_path = item
-                    all_items.append(list_item)
-                else:
-                    icon = "📄"
-                    label = Label(f"{icon} {item.name}")
-                    list_item = ListItem(label, classes="file")
-                    list_item.item_path = item
-                    all_items.append(list_item)
-
-            # 添加所有项目到ListView
-            for item in all_items:
-                list_view.append(item)
-
+            return dir_items, ""
+        except PermissionError:
+            return [], f"无权限访问: {path}"
         except Exception as e:
-            self.app.notify(f"读取目录失败: {e}", severity="error")
+            return [], f"读取目录失败: {e}"
+
+    def refresh_directory_list_async(self) -> None:
+        """异步刷新目录列表"""
+        if self._loading:
+            return  # 防止重复加载
+
+        self._loading = True
+        self.run_worker(self._load_directory(), exclusive=True)
+
+    async def _load_directory(self) -> None:
+        """加载目录内容（带缓存）"""
+        try:
+            # 检查缓存
+            if self.selected_path in self._dir_cache:
+                dir_items = self._dir_cache[self.selected_path]
+                error_msg = ""
+            else:
+                # 异步扫描目录
+                dir_items, error_msg = await self._scan_directory_async(
+                    self.selected_path
+                )
+
+                if error_msg:
+                    self.app.notify(error_msg, severity="error")
+                    self._loading = False
+                    return
+
+                # 缓存结果（最多缓存100个目录）
+                if len(self._dir_cache) > 100:
+                    # 清理最旧的缓存
+                    oldest_key = next(iter(self._dir_cache))
+                    del self._dir_cache[oldest_key]
+
+                self._dir_cache[self.selected_path] = dir_items
+
+            # 更新 UI（必须在主线程）
+            self._update_list_view(dir_items)
+
+        finally:
+            self._loading = False
+
+    def _update_list_view(self, dir_items: List[Path]) -> None:
+        """更新列表视图（在主线程调用）"""
+        list_view = self.query_one("#directory-list", ListView)
+        list_view.clear()
+
+        all_items = []
+
+        # 添加 ".." 返回上一级
+        parent = self.selected_path.parent
+        if parent != self.selected_path:
+            parent_item = ListItem(Label("📁 .."), classes="parent-dir")
+            parent_item.is_parent = True
+            all_items.append(parent_item)
+
+        # 添加目录项（限制数量）
+        max_items = self.items_per_page - len(all_items)
+        for item in dir_items[:max_items]:
+            if item.is_dir():
+                icon = "📁"
+                label = Label(f"{icon} {item.name}")
+                list_item = ListItem(label, classes="directory")
+                list_item.item_path = item
+                all_items.append(list_item)
+            else:
+                icon = "📄"
+                label = Label(f"{icon} {item.name}")
+                list_item = ListItem(label, classes="file")
+                list_item.item_path = item
+                all_items.append(list_item)
+
+        # 添加到 ListView
+        for item in all_items:
+            list_view.append(item)
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """列表项选择事件"""
@@ -218,14 +262,14 @@ class ProjectSelectorScreen(Screen):
             if parent_path != self.selected_path:
                 self.selected_path = parent_path
                 self.update_selected_path()
-                self.refresh_directory_list()
+                self.refresh_directory_list_async()
         elif hasattr(event.item, "item_path"):
             item_path = event.item.item_path
             if item_path.is_dir():
                 # 点击文件夹，进入该目录
                 self.selected_path = item_path
                 self.update_selected_path()
-                self.refresh_directory_list()
+                self.refresh_directory_list_async()
             # 文件不做处理
 
     def on_input_changed(self, event: Input.Changed) -> None:
@@ -236,7 +280,7 @@ class ProjectSelectorScreen(Screen):
                 if path.exists() and path.is_dir():
                     self.selected_path = path
                     self.update_selected_path()
-                    self.refresh_directory_list()
+                    self.refresh_directory_list_async()
             except Exception:
                 pass  # 忽略无效路径
 

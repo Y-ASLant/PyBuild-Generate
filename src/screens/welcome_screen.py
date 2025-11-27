@@ -9,7 +9,7 @@ from textual.containers import Container, Vertical, Horizontal
 from textual.widgets import Static, Button, Link
 
 
-def generate_logo(text="PYBUILD", font="big"):
+def generate_logo(text="PyBuilder", font="big"):
     """使用 pyfiglet 生成 ASCII Logo"""
     try:
         return pyfiglet.figlet_format(text, font=font)
@@ -106,12 +106,14 @@ class WelcomeScreen(Screen):
     def compose(self) -> ComposeResult:
         """创建欢迎界面组件"""
         # 运行时生成 LOGO，避免模块导入阶段错误
-        logo = generate_logo("PyBuild", "big")
+        logo = generate_logo("PyBuilder", "big")
 
         with Container(id="welcome-container"):
             yield Static(logo, id="logo")
             with Container(id="title"):
-                yield Link("Github Star.", url="https://github.com/Y-ASLant/PyBuild-Generate")
+                yield Link(
+                    "Github Star.", url="https://github.com/Y-ASLant/PyBuild-Generate"
+                )
             yield Static(
                 "Cross-Platform Python Build Script Generator Tools", id="subtitle"
             )
