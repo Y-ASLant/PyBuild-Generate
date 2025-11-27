@@ -1,0 +1,36 @@
+name: Build with PyInstaller
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  build:
+    # 只在提交信息包含 build_0: 时触发
+    if: contains(github.event.head_commit.message, 'build_0:')
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      
+      - name: Install dependencies
+        run: uv sync
+      
+      - name: Build with PyInstaller
+        run: uv run build_pyinstaller.py
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PyBuilder-PyInstaller-Windows
+          path: build/PyBuilder/
+          if-no-files-found: error
+          retention-days: 7
