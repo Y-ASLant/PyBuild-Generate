@@ -20,7 +20,7 @@ from src.utils import (
 class PackageOptionsScreen(Screen):
     """打包选项配置屏幕"""
 
-    CSS_PATH = Path(__file__).parent / "package_options_screen.tcss"
+    CSS_PATH = Path(__file__).parent.parent / "style" / "package_options_screen.tcss"
 
     BINDINGS = [
         Binding("escape", "back", "返回"),
