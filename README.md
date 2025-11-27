@@ -103,6 +103,8 @@ uv run build_pyinstaller.py
 | `F8` | textual-light 主题 |
 | `ESC` | 返回上一步 |
 | `Ctrl+C` | 退出程序 |
+| `Ctrl+S` | 保存配置 |
+
 
 
 ## 配置文件
@@ -110,7 +112,7 @@ uv run build_pyinstaller.py
 程序会在运行目录下生成 `config.yaml` 配置文件：
 
 ```yaml
-theme: textual-dark      # 界面主题
+theme: textual-dark      # 界面默认主题
 terminal_min_cols: 112   # 最小终端宽度
 terminal_min_rows: 32    # 最小终端高度
 ```
