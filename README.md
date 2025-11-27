@@ -80,7 +80,11 @@ uv run main.py
 ### 构建可执行文件
 
 ```bash
-uv run build.py
+# 使用Nuitka
+uv run build_nuitka.py
+
+# 使用Pyinstaller
+uv run build_pyinstaller.py
 ```
 
 构建产物将输出到 `build/` 目录。
@@ -97,7 +101,9 @@ uv run build.py
 | `F6` | tokyo-night 主题 |
 | `F7` | catppuccin-latte 主题 |
 | `F8` | textual-light 主题 |
+| `ESC` | 返回上一步 |
 | `Ctrl+C` | 退出程序 |
+
 
 ## 配置文件
 
