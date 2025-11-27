@@ -11,7 +11,7 @@ from src.utils import resize_terminal, load_config
 
 def show_version():
     """显示版本和作者信息"""
-    print(f"PyBuild-Generate v{__version__}")
+    print(f"PyBuild-Generate_v{__version__}")
     print(f"作者: {__author__}")
     print(f"GitHub: {__repo__}")
 

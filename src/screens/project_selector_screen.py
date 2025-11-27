@@ -47,6 +47,8 @@ class ProjectSelectorScreen(Screen):
         width: 100%;
         height: auto;
         margin-bottom: 1;
+        border: solid $accent;
+        padding: 0 1;
     }
     
     #path-label {
