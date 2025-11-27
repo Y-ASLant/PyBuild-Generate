@@ -112,7 +112,7 @@ class WelcomeScreen(Screen):
             yield Static(logo, id="logo")
             with Container(id="title"):
                 yield Link(
-                    "Github Star.", url="https://github.com/Y-ASLant/PyBuild-Generate"
+                    "Github Star.", url="https://github.com/Y-ASLant/PyBuilder-Generate"
                 )
             yield Static(
                 "Cross-Platform Python Build Script Generator Tools", id="subtitle"

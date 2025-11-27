@@ -1,4 +1,4 @@
-# PyBuild-Generate - 正在重构中(20251126)
+# PyBuilder-Generate - 正在重构中(20251126)
 
 <div align="center">
 
@@ -112,7 +112,7 @@ terminal_min_rows: 32    # 最小终端高度
 ## 项目结构
 
 ```
-PyBuild-Generate/
+PyBuilder-Generate/
 ├── main.py              # 程序入口
 ├── build.py             # Nuitka 构建脚本
 ├── config.yaml          # 用户配置文件

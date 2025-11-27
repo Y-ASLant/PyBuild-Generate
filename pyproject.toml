@@ -1,5 +1,5 @@
 [project]
-name = "PyBuild-Generate"
+name = "PyBuilder-Generate"
 version = "1.0.0"
 description = "跨平台 Python 编译脚本生成器 TUI 版本"
 readme = "README.md"
@@ -16,4 +16,4 @@ dependencies = [
 ]
 
 [project.scripts]
-pybuild-tui = "src.__main__:main"
+pybuilder-tui = "src.__main__:main"

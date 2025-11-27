@@ -20,7 +20,7 @@ def main():
     """主函数"""
     # 解析命令行参数
     parser = argparse.ArgumentParser(
-        description="PyBuild-Generate - 跨平台 Python 编译脚本生成器", add_help=True
+        description="PyBuilder-Generate - 跨平台 Python 编译脚本生成器", add_help=True
     )
     parser.add_argument(
         "-V", "--version", action="store_true", help="显示版本和作者信息"

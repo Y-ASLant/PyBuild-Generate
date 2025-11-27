@@ -1,7 +1,7 @@
 # build_config.yaml - 项目构建配置
 
 # 项目基本信息
-project_name: PyBuild
+project_name: PyBuilder
 version: 1.0.0
 company_name: ASLant
 entry_file: main.py
