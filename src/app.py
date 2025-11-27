@@ -18,6 +18,9 @@ class PyBuildTUI(App):
 
     ENABLE_COMMAND_PALETTE = False
 
+    # 通知配置
+    NOTIFICATION_TIMEOUT = 1.5  # 通知显示时长（秒）
+
     # Toast 通知样式：定位到右上角
     CSS = """
     ToastRack {
@@ -63,6 +66,22 @@ class PyBuildTUI(App):
         # 设置启动主题
         self.theme = self.initial_theme
         self.push_screen(WelcomeScreen())
+
+    def notify(
+        self,
+        message: str,
+        *,
+        title: str = "",
+        severity: str = "information",
+        timeout: float | None = None,
+    ) -> None:
+        """重写 notify 方法以设置自定义显示时长"""
+        # 使用自定义超时时间，如果未指定则使用默认值
+        if timeout is None:
+            timeout = self.NOTIFICATION_TIMEOUT
+
+        # 调用父类的 notify 方法
+        super().notify(message, title=title, severity=severity, timeout=timeout)
 
     # 主题切换
     def action_set_theme(self, theme: str) -> None:
