@@ -203,6 +203,15 @@ class PackageOptionsScreen(Screen):
         # 根据构庻工具动态生成选项（开关值已在创庻时设置）
         self._create_options_fields()
 
+        # 如果是 PyInstaller 且单文件模式，禁用内部目录名称输入框
+        if self.config.get("build_tool") == "pyinstaller" and self.config.get(
+            "onefile", True
+        ):
+            try:
+                self.query_one("#contents-dir-input", Input).disabled = True
+            except Exception:
+                pass
+
     def _create_switch_widget(
         self, switch_id: str, label: str, default_value: bool, config_key: str
     ):
@@ -356,6 +365,11 @@ class PackageOptionsScreen(Screen):
             # 左列：所有开关
             left_widgets.append(
                 self._create_switch_widget(
+                    "onefile-switch", "单文件模式", True, "onefile"
+                )
+            )
+            left_widgets.append(
+                self._create_switch_widget(
                     "clean-switch", "清理临时文件", True, "clean"
                 )
             )
@@ -471,17 +485,23 @@ class PackageOptionsScreen(Screen):
             existing_config["show_progressbar"] = not quiet_mode
 
             # PyInstaller 特有选项
+            existing_config["onefile"] = self.query_one("#onefile-switch", Switch).value
             existing_config["clean"] = self.query_one("#clean-switch", Switch).value
             existing_config["noconfirm"] = self.query_one(
                 "#noconfirm-switch", Switch
             ).value
             existing_config["debug"] = self.query_one("#debug-switch", Switch).value
 
-            # 内部目录名称
-            contents_dir = self.query_one("#contents-dir-input", Input).value.strip()
-            existing_config["contents_directory"] = (
-                contents_dir if contents_dir else "."
-            )
+            # 内部目录名称（单文件模式下忽略）
+            if not existing_config["onefile"]:
+                contents_dir = self.query_one(
+                    "#contents-dir-input", Input
+                ).value.strip()
+                existing_config["contents_directory"] = (
+                    contents_dir if contents_dir else "."
+                )
+            else:
+                existing_config["contents_directory"] = "."
 
             # UAC 管理员权限
             existing_config["uac_admin"] = self.query_one(
@@ -509,6 +529,17 @@ class PackageOptionsScreen(Screen):
 
         # 更新self.config为完整配置
         self.config = existing_config
+
+    def on_switch_changed(self, event: Switch.Changed) -> None:
+        """处理开关变化事件"""
+        if event.switch.id == "onefile-switch":
+            try:
+                contents_dir_input = self.query_one("#contents-dir-input", Input)
+                contents_dir_input.disabled = event.value
+                if event.value:
+                    contents_dir_input.value = ""
+            except Exception:
+                pass
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """处理按钮点击事件"""
