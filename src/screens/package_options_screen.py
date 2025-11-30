@@ -299,14 +299,30 @@ class PackageOptionsScreen(Screen):
             )
             switches_row2 = Horizontal(switch5, switch6, classes="switches-row")
 
-            # 高级选项标签页内容（垂直布局：2行开关）
+            # 高级选项 - 第3行输入框（1个）
+            advanced_input1 = self._create_input_widget(
+                "runtime-tmpdir-input",
+                "运行时临时目录:",
+                "runtime_tmpdir",
+                "例如: /tmp/myapp (单文件模式)",
+            )
+            advanced_input2 = Vertical(
+                Label("", classes="field-label"),  # 占位
+                classes="field-group",
+            )
+            advanced_inputs_row = Horizontal(
+                advanced_input1, advanced_input2, classes="inputs-row"
+            )
+
+            # 高级选项标签页内容（垂直布局：2行开关 + 1行输入框）
             advanced_content = Vertical(
                 switches_row1,
                 switches_row2,
+                advanced_inputs_row,
                 classes="basic-options-content",
             )
 
-            # 导入与数据标签页 - 第1行输入框（2个）
+            # 数据导入标签页 - 第1行输入框（2个）
             import_input1 = self._create_input_widget(
                 "hidden-imports-input",
                 "隐藏导入 (支持空格、中英文逗号分隔):",
@@ -321,7 +337,7 @@ class PackageOptionsScreen(Screen):
             )
             import_row1 = Horizontal(import_input1, import_input2, classes="inputs-row")
 
-            # 导入与数据标签页 - 第2行输入框（2个）
+            # 数据导入标签页 - 第2行输入框（2个）
             import_input3 = self._create_input_widget(
                 "collect-submodules-input",
                 "收集子模块 (支持空格、中英文逗号分隔):",
@@ -336,7 +352,7 @@ class PackageOptionsScreen(Screen):
             )
             import_row2 = Horizontal(import_input3, import_input4, classes="inputs-row")
 
-            # 导入与数据标签页 - 第3行输入框（2个）
+            # 数据导入标签页 - 第3行输入框（2个）
             import_input5 = self._create_input_widget(
                 "collect-binaries-input",
                 "收集二进制文件 (支持空格、中英文逗号分隔):",
@@ -351,7 +367,7 @@ class PackageOptionsScreen(Screen):
             )
             import_row3 = Horizontal(import_input5, import_input6, classes="inputs-row")
 
-            # 导入与数据标签页 - 第4行输入框（2个）
+            # 数据导入标签页 - 第4行输入框（2个）
             import_input7 = self._create_input_widget(
                 "add-data-input",
                 "数据文件 (支持空格、中英文逗号分隔):",
@@ -366,12 +382,71 @@ class PackageOptionsScreen(Screen):
             )
             import_row4 = Horizontal(import_input7, import_input8, classes="inputs-row")
 
-            # 导入与数据标签页内容（垂直布局：4行输入框）
+            # 数据导入标签页内容（垂直布局：4行输入框）
             import_content = Vertical(
                 import_row1,
                 import_row2,
                 import_row3,
                 import_row4,
+                classes="basic-options-content",
+            )
+
+            # 系统特性标签页 - Windows 特性（第1行输入框）
+            platform_input1 = self._create_input_widget(
+                "win-version-file-input",
+                "Windows 版本信息文件:",
+                "win_version_file",
+                "例如: version_info.txt",
+            )
+            platform_input2 = self._create_input_widget(
+                "win-manifest-input",
+                "Windows Manifest 文件:",
+                "win_manifest",
+                "例如: app.manifest",
+            )
+            platform_row1 = Horizontal(
+                platform_input1, platform_input2, classes="inputs-row"
+            )
+
+            # 系统特性标签页 - macOS 特性（第2行输入框）
+            platform_input3 = self._create_input_widget(
+                "target-arch-input",
+                "目标架构 (macOS):",
+                "target_architecture",
+                "例如: x86_64, arm64, universal2",
+            )
+            platform_input4 = self._create_input_widget(
+                "osx-bundle-id-input",
+                "macOS Bundle 标识符:",
+                "osx_bundle_identifier",
+                "例如: com.company.appname",
+            )
+            platform_row2 = Horizontal(
+                platform_input3, platform_input4, classes="inputs-row"
+            )
+
+            # 系统特性标签页 - macOS 特性（第3行输入框）
+            platform_input5 = self._create_input_widget(
+                "osx-entitlements-input",
+                "macOS 权限文件:",
+                "osx_entitlements_file",
+                "例如: entitlements.plist",
+            )
+            platform_input6 = self._create_input_widget(
+                "codesign-identity-input",
+                "代码签名身份 (macOS):",
+                "codesign_identity",
+                "例如: Developer ID Application",
+            )
+            platform_row3 = Horizontal(
+                platform_input5, platform_input6, classes="inputs-row"
+            )
+
+            # 系统特性标签页内容（垂直布局：3行输入框）
+            platform_content = Vertical(
+                platform_row1,
+                platform_row2,
+                platform_row3,
                 classes="basic-options-content",
             )
 
@@ -381,8 +456,9 @@ class PackageOptionsScreen(Screen):
             tabs.compose_add_child(
                 TabPane("高级选项", advanced_content, id="advanced-tab")
             )
+            tabs.compose_add_child(TabPane("数据导入", import_content, id="import-tab"))
             tabs.compose_add_child(
-                TabPane("导入与数据", import_content, id="import-tab")
+                TabPane("系统特性", platform_content, id="platform-tab")
             )
 
             # 挂载标签页容器
@@ -508,6 +584,35 @@ class PackageOptionsScreen(Screen):
             # 添加二进制文件
             existing_config["add_binary"] = self.query_one(
                 "#add-binary-input", Input
+            ).value.strip()
+
+            # 运行时临时目录
+            existing_config["runtime_tmpdir"] = self.query_one(
+                "#runtime-tmpdir-input", Input
+            ).value.strip()
+
+            # 目标架构
+            existing_config["target_architecture"] = self.query_one(
+                "#target-arch-input", Input
+            ).value.strip()
+
+            # 系统特性 - Windows
+            existing_config["win_version_file"] = self.query_one(
+                "#win-version-file-input", Input
+            ).value.strip()
+            existing_config["win_manifest"] = self.query_one(
+                "#win-manifest-input", Input
+            ).value.strip()
+
+            # 系统特性 - macOS
+            existing_config["osx_bundle_identifier"] = self.query_one(
+                "#osx-bundle-id-input", Input
+            ).value.strip()
+            existing_config["osx_entitlements_file"] = self.query_one(
+                "#osx-entitlements-input", Input
+            ).value.strip()
+            existing_config["codesign_identity"] = self.query_one(
+                "#codesign-identity-input", Input
             ).value.strip()
 
             # 启动画面图片（仅单文件模式时读取UI值）

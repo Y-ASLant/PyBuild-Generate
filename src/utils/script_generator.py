@@ -227,6 +227,8 @@ def generate_pyinstaller_script(config: Dict[str, Any], project_dir: Path) -> st
     lines.append("# 构建配置")
     lines.append(f"PROJECT_NAME = '{config['project_name']}'")
     lines.append(f"VERSION = '{config['version']}'")
+    if config.get("company_name"):
+        lines.append(f"COMPANY_NAME = '{config['company_name']}'")
     lines.append(f"ENTRY_FILE = '{config['entry_file']}'")
     if config.get("icon_file"):
         lines.append(f"ICON_FILE = '{config['icon_file']}'")
@@ -315,6 +317,41 @@ def generate_pyinstaller_script(config: Dict[str, Any], project_dir: Path) -> st
     # UAC 管理员权限
     if config.get("uac_admin", False):
         lines.append("        '--uac-admin',")
+
+    # 运行时临时目录（仅单文件模式）
+    runtime_tmpdir = config.get("runtime_tmpdir", "")
+    if runtime_tmpdir and onefile_mode:
+        lines.append(f"        '--runtime-tmpdir={runtime_tmpdir}',")
+
+    # 目标架构
+    target_arch = config.get("target_architecture", "")
+    if target_arch:
+        lines.append(f"        '--target-architecture={target_arch}',")
+
+    # Windows 版本信息文件
+    win_version_file = config.get("win_version_file", "")
+    if win_version_file:
+        lines.append(f"        '--version-file={win_version_file}',")
+
+    # Windows Manifest 文件
+    win_manifest = config.get("win_manifest", "")
+    if win_manifest:
+        lines.append(f"        '--manifest={win_manifest}',")
+
+    # macOS Bundle 标识符
+    osx_bundle_id = config.get("osx_bundle_identifier", "")
+    if osx_bundle_id:
+        lines.append(f"        '--osx-bundle-identifier={osx_bundle_id}',")
+
+    # macOS 权限文件
+    osx_entitlements = config.get("osx_entitlements_file", "")
+    if osx_entitlements:
+        lines.append(f"        '--osx-entitlements-file={osx_entitlements}',")
+
+    # macOS 代码签名
+    codesign_identity = config.get("codesign_identity", "")
+    if codesign_identity:
+        lines.append(f"        '--codesign-identity={codesign_identity}',")
 
     # 隐藏导入
     hidden_imports = config.get("hidden_imports", "")
