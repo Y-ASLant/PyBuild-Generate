@@ -59,6 +59,7 @@ def build():
         '--collect-submodules=textual',
         '--collect-data=pyfiglet',
         f'--add-data={os.path.join('src', 'style')}{data_separator}{os.path.join('src', 'style')}',
+        f'--add-data={'docs'}{data_separator}{'docs'}',
         ENTRY_FILE,
     ]
 
