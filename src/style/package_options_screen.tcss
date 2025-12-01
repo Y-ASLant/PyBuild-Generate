@@ -136,16 +136,13 @@ TabPane {
 }
 
 Tabs {
-    background: $panel;
 }
 
 Tab {
-    background: $panel;
     color: $text-muted;
 }
 
 Tab.-active {
-    background: $primary;
     color: $text;
     text-style: bold;
 }
