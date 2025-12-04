@@ -90,8 +90,10 @@ def generate_nuitka_script(config: Dict[str, Any], project_dir: Path) -> str:
     if config.get("lto", False):
         lines.append("        '--lto=yes',")
 
-    jobs = config.get("jobs", 4)
-    lines.append(f"        '--jobs={jobs}',")
+    # 编译线程数（0或负数表示自动分配，不添加参数）
+    jobs = config.get("jobs", 0)
+    if jobs > 0:
+        lines.append(f"        '--jobs={jobs}',")
 
     # Python 优化
     python_flag = config.get("python_flag", "")
@@ -120,6 +122,10 @@ def generate_nuitka_script(config: Dict[str, Any], project_dir: Path) -> str:
     # 移除构建文件
     if config.get("remove_output", True):
         lines.append("        '--remove-output',")
+
+    # 不生成 .pyi 文件
+    if config.get("no_pyi_file", False):
+        lines.append("        '--no-pyi-file',")
 
     # 插件
     plugins = config.get("plugins", [])

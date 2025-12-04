@@ -25,9 +25,10 @@ DEFAULT_BUILD_CONFIG = {
     "remove_output": True,
     "show_progress": True,
     "lto": False,
-    "jobs": 4,
+    "jobs": 0,  # 0或负数表示自动分配，正数表示指定线程数
     "python_flag": "",  # 空字符串表示不使用，可选值: "-O", "no_asserts", "no_docstrings"
     "compiler": "msvc",
+    "no_pyi_file": False,
     # PyInstaller特有
     "clean": True,
     "noconfirm": False,
@@ -182,11 +183,14 @@ def save_build_config(project_dir: Path, config: Dict[str, Any]) -> bool:
                 f"show_progress: {str(config.get('show_progress', True)).lower()}\n"
             )
             lines.append(f"lto: {str(config.get('lto', False)).lower()}\n")
-            lines.append(f"jobs: {config.get('jobs', 4)}\n")
+            lines.append(f"jobs: {config.get('jobs', 0)}  # 0或负数=自动分配\n")
             python_flag = config.get("python_flag", "")
             if python_flag:
                 lines.append(f"python_flag: {python_flag}\n")
             lines.append(f"compiler: {config.get('compiler', 'msvc')}\n")
+            lines.append(
+                f"no_pyi_file: {str(config.get('no_pyi_file', False)).lower()}\n"
+            )
 
         # PyInstaller特有选项
         if config.get("build_tool") == "pyinstaller":
