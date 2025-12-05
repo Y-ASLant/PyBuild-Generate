@@ -318,11 +318,65 @@ class PackageOptionsScreen(Screen):
                 classes="basic-options-content",
             )
 
+            # 数据导入标签页 - 第1行输入框（2个）
+            nuitka_import_input1 = self._create_input_widget(
+                "nuitka-include-package-input",
+                "包含包 (支持空格、中英文逗号分隔):",
+                "include_packages",
+                "例如: numpy pandas PIL",
+            )
+            nuitka_import_input2 = self._create_input_widget(
+                "nuitka-include-module-input",
+                "包含模块 (支持空格、中英文逗号分隔):",
+                "include_modules",
+                "例如: requests.adapters os.path",
+            )
+            nuitka_import_row1 = Horizontal(nuitka_import_input1, nuitka_import_input2, classes="inputs-row")
+
+            # 数据导入标签页 - 第2行输入框（2个）
+            nuitka_import_input3 = self._create_input_widget(
+                "nuitka-nofollow-import-input",
+                "排除导入 (支持空格、中英文逗号分隔):",
+                "nofollow_imports",
+                "例如: tkinter test unittest",
+            )
+            nuitka_import_input4 = self._create_input_widget(
+                "nuitka-include-data-files-input",
+                "数据文件 (支持空格、中英文逗号分隔):",
+                "include_data_files",
+                "格式: src;dest 多个用空格",
+            )
+            nuitka_import_row2 = Horizontal(nuitka_import_input3, nuitka_import_input4, classes="inputs-row")
+
+            # 数据导入标签页 - 第3行输入框（2个）
+            nuitka_import_input5 = self._create_input_widget(
+                "nuitka-include-data-dir-input",
+                "数据目录 (支持空格、中英文逗号分隔):",
+                "include_data_dirs",
+                "格式: src;dest 多个用空格",
+            )
+            nuitka_import_input6 = Vertical(
+                Label("", classes="field-label"),  # 占位
+                classes="field-group",
+            )
+            nuitka_import_row3 = Horizontal(nuitka_import_input5, nuitka_import_input6, classes="inputs-row")
+
+            # 数据导入标签页内容（垂直布局：3行输入框）
+            nuitka_import_content = Vertical(
+                nuitka_import_row1,
+                nuitka_import_row2,
+                nuitka_import_row3,
+                classes="basic-options-content",
+            )
+
             # 创建标签页容器并使用 compose 方法添加标签页
             tabs = TabbedContent(id="nuitka-tabs")
             tabs.compose_add_child(TabPane("基本选项", basic_content, id="basic-tab"))
             tabs.compose_add_child(
                 TabPane("高级选项", advanced_content, id="advanced-tab")
+            )
+            tabs.compose_add_child(
+                TabPane("数据导入", nuitka_import_content, id="nuitka-import-tab")
             )
 
             # 挂载标签页容器
@@ -594,6 +648,23 @@ class PackageOptionsScreen(Screen):
             existing_config["assume_yes_for_downloads"] = self.query_one(
                 "#assume-yes-switch", Switch
             ).value
+            
+            # 数据导入选项
+            existing_config["include_packages"] = self.query_one(
+                "#nuitka-include-package-input", Input
+            ).value.strip()
+            existing_config["include_modules"] = self.query_one(
+                "#nuitka-include-module-input", Input
+            ).value.strip()
+            existing_config["nofollow_imports"] = self.query_one(
+                "#nuitka-nofollow-import-input", Input
+            ).value.strip()
+            existing_config["include_data_files"] = self.query_one(
+                "#nuitka-include-data-files-input", Input
+            ).value.strip()
+            existing_config["include_data_dirs"] = self.query_one(
+                "#nuitka-include-data-dir-input", Input
+            ).value.strip()
 
         # PyInstaller特有选项
         if build_tool == "pyinstaller":

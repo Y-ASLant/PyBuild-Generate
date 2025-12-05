@@ -54,6 +54,7 @@ def build():
         '--remove-output',
         '--follow-imports',
         '--assume-yes-for-downloads',
+        '--include-data-dir=src=src',
         f'--windows-icon-from-ico={ICON_FILE}',
         f'--windows-company-name={COMPANY_NAME}',
         f'--windows-product-version={VERSION}',

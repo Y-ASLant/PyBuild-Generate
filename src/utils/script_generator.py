@@ -157,6 +157,47 @@ def generate_nuitka_script(config: Dict[str, Any], project_dir: Path) -> str:
     if config.get("assume_yes_for_downloads", False):
         lines.append("        '--assume-yes-for-downloads',")
 
+    # 包含包
+    include_packages = config.get("include_packages", "")
+    if include_packages:
+        packages = [p.strip() for p in re.split(r"[,\s，]+", include_packages) if p.strip()]
+        for package in packages:
+            lines.append(f"        '--include-package={package}',")
+
+    # 包含模块
+    include_modules = config.get("include_modules", "")
+    if include_modules:
+        modules = [m.strip() for m in re.split(r"[,\s，]+", include_modules) if m.strip()]
+        for module in modules:
+            lines.append(f"        '--include-module={module}',")
+
+    # 排除导入
+    nofollow_imports = config.get("nofollow_imports", "")
+    if nofollow_imports:
+        modules = [m.strip() for m in re.split(r"[,\s，]+", nofollow_imports) if m.strip()]
+        for module in modules:
+            lines.append(f"        '--nofollow-import-to={module}',")
+
+    # 数据文件（支持 ; 分隔符，转换为 Nuitka 的 = 格式）
+    include_data_files = config.get("include_data_files", "")
+    if include_data_files:
+        entries = [e.strip() for e in include_data_files.split() if e.strip()]
+        for data_entry in entries:
+            if ";" in data_entry:
+                # 将 ; 替换为 = （Nuitka 使用 = 格式）
+                data_entry = data_entry.replace(";", "=")
+                lines.append(f"        '--include-data-files={data_entry}',")
+
+    # 数据目录（支持 ; 分隔符，转换为 Nuitka 的 = 格式）
+    include_data_dirs = config.get("include_data_dirs", "")
+    if include_data_dirs:
+        entries = [e.strip() for e in include_data_dirs.split() if e.strip()]
+        for data_entry in entries:
+            if ";" in data_entry:
+                # 将 ; 替换为 = （Nuitka 使用 = 格式）
+                data_entry = data_entry.replace(";", "=")
+                lines.append(f"        '--include-data-dir={data_entry}',")
+
     # 插件
     plugins = config.get("plugins", [])
     if isinstance(plugins, str):
