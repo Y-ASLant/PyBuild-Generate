@@ -53,7 +53,6 @@ def build():
         '--python-flag=-O',
         '--quiet',
         '--remove-output',
-        '--follow-imports',
         '--include-package=pygments',
         f'--include-data-dir={os.path.join('src', 'style')}={os.path.join('src', 'style')}',
         f'--include-data-dir={'docs'}={'docs'}',

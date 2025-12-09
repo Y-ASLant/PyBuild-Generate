@@ -23,7 +23,7 @@ jobs: 16  # 0或负数=自动分配
 python_flag: -O
 compiler: msvc
 no_pyi_file: false
-follow_imports: true
+follow_imports: false
 assume_yes_for_downloads: false
 include_packages: pygments
 include_data_dirs: src\style;src\style docs;docs
